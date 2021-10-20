@@ -66,7 +66,9 @@ UUT_ssd:ssd PORT MAP
 
  key_tb(0) <= '0', '1' after 50 ns; 
 -----------------------------------
- --- Generate template:
+ -- Copied from Circuit Design and Simulation with VHDL
+ --second edition by Volnei A. Pedroni
+The
  -- Expected output for hex0 ssd 
  expected <= "0111111" AFTER 21ns,
 				 "0011111" AFTER 120000061ns,
@@ -88,7 +90,9 @@ process(clk_tb)
 	 clk_tb <= not clk_tb after clk_period/2;
 end process;
 ----------------------------------------------
----Make comparison:
+-- Make comparison:
+-- Copied from Circuit Design and Simulation with VHDL
+-- second edition by Volnei A. Pedroni
  PROCESS
  
     BEGIN
