@@ -1,6 +1,7 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.all;
+use work.ssd_functions.all;
 
 entity ssd is
 -------------
@@ -37,12 +38,19 @@ CONSTANT time2: INTEGER := fclk*T2;
 CONSTANT time3: INTEGER := 1;
 CONSTANT turn_off : std_logic_vector(6 downto 0):= "1111111";
 SIGNAL count_ssd  : INTEGER RANGE 0 TO 8:=0;
-SIGNAL HEXOUT     : std_logic_vector (6 downto 0);
-SIGNAL delay      : INTEGER RANGE 0 TO time1;
+SIGNAL HEXOUT             : std_logic_vector (6 downto 0);
+SIGNAL HEXOUT_display     : std_logic_vector (6 downto 0);
+SIGNAL HEXOreg            : std_logic_vector (6 downto 0);
+SIGNAL delay              : INTEGER RANGE 0 TO time1;
 TYPE state IS (a, ab, b, bc, c, cd, d, de, e, ef, f, fa, a1);
 SIGNAL pr_state, nx_state: state;
    
 BEGIN
+
+HEXOreg <= integer_to_ssd(count_ssd);
+
+HEXOUT_display <= HEXOUT when SW(0) = '0' else HEXOreg;  
+
 -------Lower section of FSM:------------
  PROCESS (CLOCK_50, KEY)
    VARIABLE count: INTEGER RANGE 0 TO time1;
@@ -64,13 +72,14 @@ BEGIN
  END PROCESS;   
  
  -------Upper section of FSM:------------
+ -- Rotating LED's on SSD --
  PROCESS (pr_state)
  
  BEGIN
  
  CASE pr_state IS
  
-            WHEN a =>
+                WHEN a =>
                      HEXOUT <= "0111111"; --decimal 63
                      delay <= time1;
                      nx_state <= ab;
@@ -159,43 +168,43 @@ PROCESS (CLOCK_50, count_ssd)
 	  
 	    if rising_edge(CLOCK_50) then 
 		 
-	      HEX0S <= turn_off; 
+	        HEX0S <= turn_off; 
 			HEX1S <= turn_off; 
 			HEX2S <= turn_off; 
 			HEX3S <= turn_off; 
 			HEX4S <= turn_off; 
 			HEX5S <= turn_off; 
-	      HEX6S <= turn_off; 
+	        HEX6S <= turn_off; 
 			HEX7S <= turn_off; 
 			
 			  
 	      CASE count_ssd IS 
 			
-                          when 0 => HEX0S <= HEXOUT;
+                          when 0 => HEX0S <= HEXOUT_display;
 								  
 						  
-                          when 1 => HEX1S <= HEXOUT;  
+                          when 1 => HEX1S <= HEXOUT_display;  
                                     HEX0S <= turn_off;  
 
-                          when 2 => HEX2S <= HEXOUT;  
+                          when 2 => HEX2S <= HEXOUT_display;  
                                     HEX1S <= turn_off;  
 
-						        when 3 => HEX3S <= HEXOUT;  
+						  when 3 => HEX3S <= HEXOUT_display;  
                                     HEX2S <= turn_off;
 
-						        when 4 => HEX4S <= HEXOUT;  
+						  when 4 => HEX4S <= HEXOUT_display;  
                                     HEX3S <= turn_off;
 
-                          when 5 => HEX5S <= HEXOUT;  
+                          when 5 => HEX5S <= HEXOUT_display;  
                                     HEX4S <= turn_off;  	
   
-                          when 6 => HEX6S <= HEXOUT;  
+                          when 6 => HEX6S <= HEXOUT_display;  
                                     HEX5S <= turn_off;
 
-                          when 7 => HEX7S <= HEXOUT;  
+                          when 7 => HEX7S <= HEXOUT_display;  
                                     HEX6S <= turn_off;   
 												
-								  when 8 => HEX7S <= turn_off;  
+					      when 8 => HEX7S <= turn_off;  
                                     			
           END CASE;
 			 
