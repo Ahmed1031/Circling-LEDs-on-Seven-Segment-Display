@@ -1,6 +1,7 @@
 library ieee ;
    use IEEE.STD_LOGIC_1164.ALL;
    use ieee.std_logic_unsigned.all;
+   use work.ssd_pkg.all;
 
 entity tb_ssd is
 end tb_ssd;
@@ -17,58 +18,41 @@ architecture test_display of tb_ssd is
 port (
 	-- Inputs
 	CLOCK_50			: in std_logic;
-	KEY				  	: in std_logic_vector (3 downto 0);  -- pulled high / KEY and Button are the same 
-	SW				   	: in std_logic_vector (17 downto 0); -- pulled high
-
-   -- Seven Segment display 
-   HEX0S                : out std_logic_vector (6 downto 0);
-   HEX1S                : out std_logic_vector (6 downto 0);
-   HEX2S                : out std_logic_vector (6 downto 0);
-   HEX3S                : out std_logic_vector (6 downto 0);
-   HEX4S                : out std_logic_vector (6 downto 0);
-   HEX5S                : out std_logic_vector (6 downto 0);
-   HEX6S                : out std_logic_vector (6 downto 0);
-   HEX7S                : out std_logic_vector (6 downto 0)
+	KEY_SW			  	: in Key_Swicthes_IN_RECORD_TYPE;  -- pulled high / KEY and Button are the same 
+	
+   --x07 Seven Segment displays 
+   SSD_Display           : out SSD_Displays_OUT_RECORD_TYPE 
    );
 end component;  
 -----------------------------------------------------------
 
 	signal	clk_tb      :  STD_LOGIC:='1';
-	signal	key_tb      :  std_logic_vector(3 downto 0):=(others=>'1');
-	signal	sw_tb       :  std_logic_vector(17 downto 0):=(others=>'1');
-	signal	hex0_tb     :  std_logic_vector(6 downto 0):=(others=>'0');
-	signal	hex1_tb     :  std_logic_vector(6 downto 0):=(others=>'0');
-	signal	hex2_tb     :  std_logic_vector(6 downto 0):=(others=>'0');
-	signal	hex3_tb     :  std_logic_vector(6 downto 0):=(others=>'0');
-	signal	hex4_tb     :  std_logic_vector(6 downto 0):=(others=>'0');
-	signal	hex5_tb     :  std_logic_vector(6 downto 0):=(others=>'0');
-	signal	hex6_tb     :  std_logic_vector(6 downto 0):=(others=>'0');
-	signal	hex7_tb     :  std_logic_vector(6 downto 0):=(others=>'0');
-	signal   expected    :  std_logic_vector(6 DOWNTO 0):=(others=>'0');
+	signal  ket_sw_tb   :  Key_Swicthes_IN_RECORD_TYPE := (KEY => (others=>'1'), SW => (others=>'1'));
+	signal	hex_tb      :  SSD_Displays_OUT_RECORD_TYPE:= (HEX0S => (others=>'0'),
+														   HEX1S => (others=>'0'),
+														   HEX2S => (others=>'0'),
+														   HEX3S => (others=>'0'),
+														   HEX4S => (others=>'0'),
+														   HEX5S => (others=>'0'),
+														   HEX6S => (others=>'0'),
+														   HEX7S => (others=>'0'));
+														   		
+	signal   expected   :  std_logic_vector(6 DOWNTO 0):=(others=>'0');
 	constant clk_period :time := 20ns;
 --------------------------------------------------------
 begin
 
 UUT_ssd:ssd PORT MAP
 
-(     CLOCK_50=> clk_tb,
-		KEY     => key_tb,
-		SW      => sw_tb, 
-		HEX0S   => hex0_tb,      
-		HEX1S   => hex1_tb,   
-		HEX2S   => hex2_tb,    
-		HEX3S   => hex3_tb,  	
-	   HEX4S   => hex4_tb, 
-	   HEX5S   => hex5_tb, 
-      HEX6S   => hex6_tb, 
-      HEX7S   => hex7_tb);
+(     CLOCK_50 => clk_tb,
+	  KEY_SW   => ket_sw_tb,
+	  SSD_Display  => hex_tb);
 ----------------------------
 
- key_tb(0) <= '0', '1' after 50 ns; 
+ ket_sw_tb.KEY(0) <= '0', '1' after 50 ns; 
+ ket_sw_tb.SW(0)  <= '0';
 -----------------------------------
- -- Copied from Circuit Design and Simulation with VHDL
- --second edition by Volnei A. Pedroni
-The
+ --- Generate template:
  -- Expected output for hex0 ssd 
  expected <= "0111111" AFTER 21ns,
 				 "0011111" AFTER 120000061ns,
@@ -90,9 +74,7 @@ process(clk_tb)
 	 clk_tb <= not clk_tb after clk_period/2;
 end process;
 ----------------------------------------------
--- Make comparison:
--- Copied from Circuit Design and Simulation with VHDL
--- second edition by Volnei A. Pedroni
+---Make comparison:
  PROCESS
  
     BEGIN
@@ -101,10 +83,10 @@ end process;
 		
         IF (NOW<960997937ns) THEN
 		  
-           ASSERT (hex0_tb = expected)
+           ASSERT (hex_tb.HEX0S = expected)
 			  
 				 REPORT "Mismatch at t=" & TIME'IMAGE(NOW) &
-				 " hex0_tb =" & INTEGER'IMAGE(conv_integer(hex0_tb)) &
+				 " hex0_tb =" & INTEGER'IMAGE(conv_integer(hex_tb.HEX0S)) &
 				 " expexted =" & INTEGER'IMAGE(conv_integer(expected))
              SEVERITY FAILURE;
 				 

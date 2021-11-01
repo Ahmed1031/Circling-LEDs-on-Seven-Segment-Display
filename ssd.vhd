@@ -1,33 +1,24 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.all;
-use work.ssd_functions.all;
+use work.ssd_pkg.all;
 
 entity ssd is
 -------------
 GENERIC (fclk: INTEGER := 50_000; --clk frequency (kHz)
            T1: INTEGER := 120;    --long delay (ms)
            T2: INTEGER := 40);    --short delay (ms)
-		   
-
+	
 -------------------------------------------------------------------------------
 --							 Port Declarations							 --
 -------------------------------------------------------------------------------
 port (
 	-- Inputs
 	CLOCK_50			: in std_logic;
-	KEY				  	: in std_logic_vector (3 downto 0);  -- pulled high / KEY and Button are the same 
-	SW				   	: in std_logic_vector (17 downto 0); -- pulled high
-
-   -- Seven Segment display 
-   HEX0S                : out std_logic_vector (6 downto 0);
-   HEX1S                : out std_logic_vector (6 downto 0);
-   HEX2S                : out std_logic_vector (6 downto 0);
-   HEX3S                : out std_logic_vector (6 downto 0);
-   HEX4S                : out std_logic_vector (6 downto 0);
-   HEX5S                : out std_logic_vector (6 downto 0);
-   HEX6S                : out std_logic_vector (6 downto 0);
-   HEX7S                : out std_logic_vector (6 downto 0)
+	KEY_SW			: in Key_Swicthes_IN_RECORD_TYPE;  -- pulled high / KEY and Button are the same 
+	
+   --x07 Seven Segment displays 
+   SSD_Display    : out SSD_Displays_OUT_RECORD_TYPE 
    );
 end ssd;
 
@@ -49,17 +40,17 @@ BEGIN
 
 HEXOreg <= integer_to_ssd(count_ssd);
 
-HEXOUT_display <= HEXOUT when SW(0) = '0' else HEXOreg;  
+HEXOUT_display <= HEXOUT when KEY_SW.SW(0) = '0' else HEXOreg;  
 
 -------Lower section of FSM:------------
- PROCESS (CLOCK_50, KEY)
+ PROCESS (CLOCK_50, KEY_SW)
    VARIABLE count: INTEGER RANGE 0 TO time1;
     BEGIN
-         IF (KEY(0)='0') THEN
+         IF (KEY_SW.KEY(0)='0') THEN
              pr_state <= a;
 			 
          ELSIF (CLOCK_50'EVENT AND CLOCK_50='1') THEN
-            IF (KEY(1)='1') THEN
+            IF (KEY_SW.KEY(1)='1') THEN
                 count := count + 1;
 				
             IF (count=delay) THEN
@@ -147,9 +138,9 @@ HEXOUT_display <= HEXOUT when SW(0) = '0' else HEXOreg;
  END PROCESS;
  ------------------------------------------------------------
  -------Toggling SSD Display by count------------
- PROCESS (CLOCK_50, KEY)
+ PROCESS (CLOCK_50, KEY_SW)
      BEGIN
-         IF ((KEY(0)='0') or ( count_ssd = 8)) THEN
+         IF ((KEY_SW.KEY(0)='0') or ( count_ssd = 8)) THEN
              count_ssd <= 0;
 			 
          ELSIF rising_edge(CLOCK_50) THEN
@@ -168,43 +159,43 @@ PROCESS (CLOCK_50, count_ssd)
 	  
 	    if rising_edge(CLOCK_50) then 
 		 
-	        HEX0S <= turn_off; 
-			HEX1S <= turn_off; 
-			HEX2S <= turn_off; 
-			HEX3S <= turn_off; 
-			HEX4S <= turn_off; 
-			HEX5S <= turn_off; 
-	        HEX6S <= turn_off; 
-			HEX7S <= turn_off; 
+	      SSD_Display.HEX0S <= turn_off; 
+			SSD_Display.HEX1S <= turn_off; 
+			SSD_Display.HEX2S <= turn_off; 
+			SSD_Display.HEX3S <= turn_off; 
+			SSD_Display.HEX4S <= turn_off; 
+			SSD_Display.HEX5S <= turn_off; 
+	      SSD_Display.HEX6S <= turn_off; 
+			SSD_Display.HEX7S <= turn_off; 
 			
 			  
 	      CASE count_ssd IS 
 			
-                          when 0 => HEX0S <= HEXOUT_display;
+                          when 0 => SSD_Display.HEX0S <= HEXOUT_display;
 								  
 						  
-                          when 1 => HEX1S <= HEXOUT_display;  
-                                    HEX0S <= turn_off;  
+                          when 1 => SSD_Display.HEX1S <= HEXOUT_display;  
+                                    SSD_Display.HEX0S <= turn_off;  
 
-                          when 2 => HEX2S <= HEXOUT_display;  
-                                    HEX1S <= turn_off;  
+                          when 2 => SSD_Display.HEX2S <= HEXOUT_display;  
+                                    SSD_Display.HEX1S <= turn_off;  
 
-						  when 3 => HEX3S <= HEXOUT_display;  
-                                    HEX2S <= turn_off;
+								  when 3 => SSD_Display.HEX3S <= HEXOUT_display;  
+												SSD_Display.HEX2S <= turn_off;
 
-						  when 4 => HEX4S <= HEXOUT_display;  
-                                    HEX3S <= turn_off;
+								  when 4 => SSD_Display.HEX4S <= HEXOUT_display;  
+												SSD_Display.HEX3S <= turn_off;
 
-                          when 5 => HEX5S <= HEXOUT_display;  
-                                    HEX4S <= turn_off;  	
+                          when 5 => SSD_Display.HEX5S <= HEXOUT_display;  
+                                    SSD_Display.HEX4S <= turn_off;  	
   
-                          when 6 => HEX6S <= HEXOUT_display;  
-                                    HEX5S <= turn_off;
+                          when 6 => SSD_Display.HEX6S <= HEXOUT_display;  
+                                    SSD_Display.HEX5S <= turn_off;
 
-                          when 7 => HEX7S <= HEXOUT_display;  
-                                    HEX6S <= turn_off;   
+                          when 7 => SSD_Display.HEX7S <= HEXOUT_display;  
+                                    SSD_Display.HEX6S <= turn_off;   
 												
-					      when 8 => HEX7S <= turn_off;  
+					           when 8 => SSD_Display.HEX7S <= turn_off;  
                                     			
           END CASE;
 			 
